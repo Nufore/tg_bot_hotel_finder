@@ -15,19 +15,24 @@ def lowprice(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: call.data.isdigit())
 def get_specify_city(call):
     bot.answer_callback_query(call.id)
-    bot.send_message(call.message.chat.id, call.data)
+    # bot.send_message(call.message.chat.id, call.data)
+    bot.send_message(call.from_user.id, f'Город записал.{call.data}\nТеперь введи кол-во отелей (callback)')
+    bot.set_state(call.from_user.id, UserInfoState.number_of_hotels, call.message.chat.id)
+
+    with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+        data['city'] = call.data
 
 
-@bot.message_handler(state=UserInfoState.city)
-def get_city(message: Message) -> None:
-    if message.text.isalpha():
-        bot.send_message(message.from_user.id, 'Город записал.\nТеперь введи кол-во отелей')
-        bot.set_state(message.from_user.id, UserInfoState.number_of_hotels, message.chat.id)
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['city'] = message.text
-    else:
-        bot.send_message(message.from_user.id, 'Название не может быть только из цифр')
+# @bot.message_handler(state=UserInfoState.city)
+# def get_city(message: Message) -> None:
+#     if message.text.isalpha():
+#         bot.send_message(message.from_user.id, 'Город записал.\nТеперь введи кол-во отелей')
+#         bot.set_state(message.from_user.id, UserInfoState.number_of_hotels, message.chat.id)
+#
+#         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+#             data['city'] = message.text
+#     else:
+#         bot.send_message(message.from_user.id, 'Название не может быть только из цифр')
 
 
 @bot.message_handler(state=UserInfoState.number_of_hotels)
