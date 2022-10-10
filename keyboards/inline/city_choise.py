@@ -32,7 +32,7 @@ def city_founding(message):
 
 
 def city_markup(message):
-	cities = city_founding(message.text)
+	cities = city_founding(message)
 	if cities:
 		# Функция "city_founding" уже возвращает список словарей с нужным именем и id
 		destinations = InlineKeyboardMarkup()
@@ -44,7 +44,7 @@ def city_markup(message):
 
 
 def city(message, bot):
-	markup = city_markup(message)
+	markup = city_markup(message.text)
 	if markup:
 		bot.send_message(message.from_user.id, 'Уточните, пожалуйста:',
 		                 reply_markup=markup)  # Отправляем кнопки с вариантами
