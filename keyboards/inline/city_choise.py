@@ -16,10 +16,10 @@ def city_founding(message):
 	}
 	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 	pattern = r'(?<="CITY_GROUP",).+?[\]]'
-	cities = list()
 
 	find = re.search(pattern, response.text)
 	if find:
+		cities = list()
 		suggestions = json.loads(f"{{{find[0]}}}")
 		for dest_id in suggestions['entities']:  # Обрабатываем результат
 			clear_destination = re.sub("</span>", '', re.sub("<span class='highlighted'>", '', dest_id['caption']))
@@ -27,19 +27,26 @@ def city_founding(message):
 			               'destination_id': dest_id['destinationId']
 			               }
 			              )
-	return cities
+		return cities
+	return
 
 
 def city_markup(message):
-	cities = city_founding(message)
-	# Функция "city_founding" уже возвращает список словарей с нужным именем и id
-	destinations = InlineKeyboardMarkup()
-	for city in cities:
-		destinations.add(InlineKeyboardButton(text=city['city_name'],
-		                                      callback_data=f'{city["destination_id"]}'))
-	return destinations
+	cities = city_founding(message.text)
+	if cities:
+		# Функция "city_founding" уже возвращает список словарей с нужным именем и id
+		destinations = InlineKeyboardMarkup()
+		for city in cities:
+			destinations.add(InlineKeyboardButton(text=city['city_name'],
+			                                      callback_data=f'{city["destination_id"]}'))
+		return destinations
+	return
 
 
 def city(message, bot):
-	bot.send_message(message.from_user.id, 'Уточните, пожалуйста:',
-	                 reply_markup=city_markup(message.text))  # Отправляем кнопки с вариантами
+	markup = city_markup(message)
+	if markup:
+		bot.send_message(message.from_user.id, 'Уточните, пожалуйста:',
+		                 reply_markup=markup)  # Отправляем кнопки с вариантами
+	else:
+		bot.send_message(message.from_user.id, 'Пустая выборка!')
