@@ -1,7 +1,9 @@
-import requests
-import re
+import datetime
 import json
+import re
+import requests
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 from config_data import config
 
 
@@ -50,3 +52,34 @@ def city(message, bot):
 		                 reply_markup=markup)  # Отправляем кнопки с вариантами
 	else:
 		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз /lowprice')
+
+
+def hotel_founding():
+	# print(type(data))
+	# print('destinationId - ', data['city'])
+	# print('number_of_hotels - ', data["number_of_hotels"])
+	# print('is_need_photos - ', (data['is_need_photos']))
+	# print('number_of_photos - ')
+
+	url = "https://hotels4.p.rapidapi.com/properties/list"
+
+	querystring = {"destinationId": "118894", "pageNumber": "1", "pageSize": "25", "checkIn": datetime.date.today(),
+	               "checkOut": datetime.date.today() + datetime.timedelta(days=1), "adults1": "1", "sortOrder": "PRICE"}
+
+	headers = {
+		"X-RapidAPI-Key": config.RAPID_API_KEY,
+		"X-RapidAPI-Host": "hotels4.p.rapidapi.com"
+	}
+
+	# response = requests.request("GET", url, headers=headers, params=querystring)
+	# if response.status_code == requests.codes.ok:
+	# 	pattern = r'(?<=,)"results":.+?(?=,"pagination)'
+	# 	find = re.search(pattern, response.text)
+	# 	if find:
+	# 		hotels = list()
+	# 		result = json.loads(f"{{{find[0]}}}")
+	# 		# print(result)
+	# 		for hotel in result['results']:
+	# 			print(hotel)
+	# else:
+	# 	print('timeout error')

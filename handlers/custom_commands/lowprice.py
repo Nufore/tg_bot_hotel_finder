@@ -2,7 +2,7 @@ from telebot.types import Message, ReplyKeyboardRemove
 from loader import bot
 from states.lowprice_information import UserInfoState
 from keyboards.reply.lowprice_is_need_photo import request_photo
-from keyboards.inline.city_choise import city
+from keyboards.inline.city_choise import city, hotel_founding
 
 
 @bot.message_handler(commands=['lowprice'])
@@ -73,19 +73,33 @@ def get_is_need_photos(message: Message) -> None:
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.number_of_photos)
 def get_number_of_photos(message: Message) -> None:
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        if data['is_need_photos'] == 'Да' and message.text.isdigit():
-            bot.send_message(message.from_user.id, 'Кол-во фото записал.')
-            data['number_of_photos'] = message.text
-            text = f'Собранная информация: \n' \
-                   f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
-                   f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
-            msg = bot.send_message(message.from_user.id, text)
-            # bot.register_next_step_handler(msg, stop_state)
-            bot.delete_state(message.from_user.id, message.chat.id)
-        else:
-            bot.send_message(message.from_user.id, 'Введите число фотографий')
+    if message.text.isdigit():
+        bot.send_message(message.from_user.id, 'Кол-во фото записал.')
 
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            data['number_of_photos'] = message.text
+
+        text = f'Собранная информация: \n' \
+               f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
+               f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
+        bot.send_message(message.from_user.id, text)
+
+        bot.delete_state(message.from_user.id, message.chat.id)
+    else:
+        bot.send_message(message.from_user.id, 'Введите число фотографий')
+    # with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+    #     if data['is_need_photos'] == 'Да' and message.text.isdigit():
+    #         bot.send_message(message.from_user.id, 'Кол-во фото записал.')
+    #         data['number_of_photos'] = message.text
+    #         text = f'Собранная информация: \n' \
+    #                f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
+    #                f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
+    #         msg = bot.send_message(message.from_user.id, text)
+    #         # bot.register_next_step_handler(msg, stop_state)
+    #         # hotel_founding(data)
+    #         bot.delete_state(message.from_user.id, message.chat.id)
+    #     else:
+    #         bot.send_message(message.from_user.id, 'Введите число фотографий')
 
 # def stop_state(message: Message) -> None:
 #     bot.delete_state(message.from_user.id, message.chat.id)
