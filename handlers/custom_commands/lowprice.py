@@ -1,4 +1,4 @@
-from telebot.types import Message
+from telebot.types import Message, ReplyKeyboardRemove
 from loader import bot
 from states.lowprice_information import UserInfoState
 from keyboards.reply.lowprice_is_need_photo import request_photo
@@ -52,7 +52,8 @@ def get_number_of_hotels(message: Message) -> None:
 @bot.message_handler(content_types=['text'], state=UserInfoState.is_need_photos)
 def get_is_need_photos(message: Message) -> None:
     if message.text.isalpha() and message.text == 'Да':
-        bot.send_message(message.from_user.id, 'Нужны ли фото записал.\nУкажи кол-во фото для каждого отеля?')
+        bot.send_message(message.from_user.id, 'Нужны ли фото записал.\nУкажи кол-во фото для каждого отеля?',
+                         reply_markup=ReplyKeyboardRemove())
         bot.set_state(message.from_user.id, UserInfoState.number_of_photos, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -63,10 +64,11 @@ def get_is_need_photos(message: Message) -> None:
         text = f'Собранная информация: \n' \
                f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
                f'Нужны ли фото - {data["is_need_photos"]}'
-        msg = bot.send_message(message.from_user.id, text)
-        bot.register_next_step_handler(msg, stop_state)
+        bot.send_message(message.from_user.id, text, reply_markup=ReplyKeyboardRemove())
+        # bot.register_next_step_handler(msg, stop_state)
+        bot.delete_state(message.from_user.id, message.chat.id)
     else:
-        bot.send_message(message.from_user.id, 'Введите "да" или "нет"')
+        bot.send_message(message.from_user.id, 'Введите "Да" или "Нет"')
 
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.number_of_photos)
@@ -79,10 +81,11 @@ def get_number_of_photos(message: Message) -> None:
                    f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
                    f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
             msg = bot.send_message(message.from_user.id, text)
-            bot.register_next_step_handler(msg, stop_state)
+            # bot.register_next_step_handler(msg, stop_state)
+            bot.delete_state(message.from_user.id, message.chat.id)
         else:
             bot.send_message(message.from_user.id, 'Введите число фотографий')
 
 
-def stop_state(message: Message) -> None:
-    bot.delete_state(message.from_user.id, message.chat.id)
+# def stop_state(message: Message) -> None:
+#     bot.delete_state(message.from_user.id, message.chat.id)

@@ -49,4 +49,4 @@ def city(message, bot):
 		bot.send_message(message.from_user.id, 'Уточните, пожалуйста:',
 		                 reply_markup=markup)  # Отправляем кнопки с вариантами
 	else:
-		bot.send_message(message.from_user.id, 'Пустая выборка!')
+		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз /lowprice')
