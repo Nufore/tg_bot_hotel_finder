@@ -2,7 +2,7 @@ import datetime
 import json
 import re
 import requests
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 
 from config_data import config
 
@@ -54,32 +54,60 @@ def city(message, bot):
 		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз /lowprice')
 
 
-def hotel_founding():
-	# print(type(data))
-	# print('destinationId - ', data['city'])
-	# print('number_of_hotels - ', data["number_of_hotels"])
-	# print('is_need_photos - ', (data['is_need_photos']))
-	# print('number_of_photos - ')
+def get_photos(endpoint_id, number_of_photos):
+	if number_of_photos > 10:
+		number_of_photos = 10
+	url = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
 
-	url = "https://hotels4.p.rapidapi.com/properties/list"
-
-	querystring = {"destinationId": "118894", "pageNumber": "1", "pageSize": "25", "checkIn": datetime.date.today(),
-	               "checkOut": datetime.date.today() + datetime.timedelta(days=1), "adults1": "1", "sortOrder": "PRICE"}
+	querystring = {"id": endpoint_id}
 
 	headers = {
 		"X-RapidAPI-Key": config.RAPID_API_KEY,
 		"X-RapidAPI-Host": "hotels4.p.rapidapi.com"
 	}
 
-	# response = requests.request("GET", url, headers=headers, params=querystring)
-	# if response.status_code == requests.codes.ok:
-	# 	pattern = r'(?<=,)"results":.+?(?=,"pagination)'
-	# 	find = re.search(pattern, response.text)
-	# 	if find:
-	# 		hotels = list()
-	# 		result = json.loads(f"{{{find[0]}}}")
-	# 		# print(result)
-	# 		for hotel in result['results']:
-	# 			print(hotel)
-	# else:
-	# 	print('timeout error')
+	response = requests.request("GET", url, headers=headers, params=querystring)
+
+	if response.status_code == requests.codes.ok:
+		pattern = r'(?<=,)"hotelImages":.+?(?=,"roomImages)'
+		find = re.search(pattern, response.text)
+		if find:
+			result = json.loads(f"{{{find[0]}}}")
+			media = list()
+			for i_photo in range(number_of_photos):
+				media.append(InputMediaPhoto(
+					result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')
+				))
+			return media
+	else:
+		print('timeout error')
+
+
+def hotel_founding(data):
+	max_number = 10
+	if int(data['number_of_hotels']) > max_number:
+		data['number_of_hotels'] = str(max_number)
+
+	url = "https://hotels4.p.rapidapi.com/properties/list"
+
+	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels'],
+	               "checkIn": datetime.date.today(),
+	               "checkOut": datetime.date.today() + datetime.timedelta(days=1),
+	               "adults1": "1", "sortOrder": "PRICE"}
+
+	headers = {
+		"X-RapidAPI-Key": config.RAPID_API_KEY,
+		"X-RapidAPI-Host": "hotels4.p.rapidapi.com"
+	}
+
+	response = requests.request("GET", url, headers=headers, params=querystring)
+
+	if response.status_code == requests.codes.ok:
+		pattern = r'(?<=,)"results":.+?(?=,"pagination)'
+		find = re.search(pattern, response.text)
+		if find:
+			result = json.loads(f"{{{find[0]}}}")
+			if data['is_need_photos'] == 'Да':
+				return result['results']
+	else:
+		print('timeout error')
