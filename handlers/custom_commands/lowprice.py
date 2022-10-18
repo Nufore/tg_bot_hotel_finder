@@ -16,7 +16,7 @@ def lowprice(message: Message) -> None:
 def get_specify_city(call):
     bot.answer_callback_query(call.id)
     # bot.send_message(call.message.chat.id, call.data)
-    bot.send_message(call.from_user.id, f'Город записал.{call.data}\nТеперь введи кол-во отелей (callback)')
+    bot.send_message(call.from_user.id, f'Город записал. {call.data}\nТеперь введи кол-во отелей (callback)')
     bot.set_state(call.from_user.id, UserInfoState.number_of_hotels, call.message.chat.id)
 
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
@@ -73,7 +73,7 @@ def get_is_need_photos(message: Message) -> None:
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.number_of_photos)
 def get_number_of_photos(message: Message) -> None:
-    if message.text.isdigit():
+    if message.text.isdigit() and int(message.text.isdigit()) > 0:
         bot.send_message(message.from_user.id, 'Кол-во фото записал.')
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -85,18 +85,22 @@ def get_number_of_photos(message: Message) -> None:
         bot.send_message(message.from_user.id, text)
 
         result = hotel_founding(data)
-        for res in result:
-            text = f'<b>{res["name"]}</b>\n' \
-                   f'{res["address"]["postalCode"]}, {res["address"]["countryName"]}, ' \
-                   f'{res["address"]["locality"]}, {res["address"]["streetAddress"]}\n'\
-                   f'Удаленность от центра: {res["landmarks"][0]["distance"]}\n' \
-                   f'Цена: {res["ratePlan"]["price"]["current"]} '\
-                   f'({res["ratePlan"]["price"]["fullyBundledPricePerStay"]})'
-            media = get_photos(res["id"], int(data["number_of_photos"]))
+        if result:
+            for res in result:
+                text = f'<b>{res["name"]}</b>\n' \
+                       f'{res["address"]["postalCode"]}, {res["address"]["countryName"]}, ' \
+                       f'{res["address"]["locality"]}, {res["address"]["streetAddress"]}\n'\
+                       f'Удаленность от центра: {res["landmarks"][0]["distance"]}\n' \
+                       f'Цена: {res["ratePlan"]["price"]["current"]} '\
+                       f'({res["ratePlan"]["price"].get("fullyBundledPricePerStay", "total ${cur}".format(cur=res["ratePlan"]["price"]["current"]))})'
+                media = get_photos(res["id"], int(data["number_of_photos"]), text)
 
-            bot.send_message(message.from_user.id, text, parse_mode='HTML')
-            bot.send_media_group(message.from_user.id, media=media)
+                # bot.send_message(message.from_user.id, text, parse_mode='HTML')
+                bot.send_media_group(message.from_user.id, media=media)
+        else:
+            bot.send_message(message.from_user.id, 'Request data not found :(')
 
         bot.delete_state(message.from_user.id, message.chat.id)
     else:
-        bot.send_message(message.from_user.id, 'Введите число фотографий')
+        bot.send_message(message.from_user.id, 'Введите число фотографий отличное от нуля')
+        # сделать проверку на множественные ошибки!!!

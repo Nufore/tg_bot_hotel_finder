@@ -54,7 +54,7 @@ def city(message, bot):
 		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз /lowprice')
 
 
-def get_photos(endpoint_id, number_of_photos):
+def get_photos(endpoint_id, number_of_photos, text):
 	if number_of_photos > 10:
 		number_of_photos = 10
 	url = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
@@ -66,7 +66,7 @@ def get_photos(endpoint_id, number_of_photos):
 		"X-RapidAPI-Host": "hotels4.p.rapidapi.com"
 	}
 
-	response = requests.request("GET", url, headers=headers, params=querystring)
+	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 
 	if response.status_code == requests.codes.ok:
 		pattern = r'(?<=,)"hotelImages":.+?(?=,"roomImages)'
@@ -75,9 +75,13 @@ def get_photos(endpoint_id, number_of_photos):
 			result = json.loads(f"{{{find[0]}}}")
 			media = list()
 			for i_photo in range(number_of_photos):
-				media.append(InputMediaPhoto(
-					result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')
-				))
+				if media:
+					media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')))
+				else:
+					media.append(
+						InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
+						                caption=text, parse_mode='HTML')
+					)
 			return media
 	else:
 		print('timeout error')
@@ -100,7 +104,7 @@ def hotel_founding(data):
 		"X-RapidAPI-Host": "hotels4.p.rapidapi.com"
 	}
 
-	response = requests.request("GET", url, headers=headers, params=querystring)
+	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 
 	if response.status_code == requests.codes.ok:
 		pattern = r'(?<=,)"results":.+?(?=,"pagination)'
@@ -111,3 +115,4 @@ def hotel_founding(data):
 				return result['results']
 	else:
 		print('timeout error')
+		return
