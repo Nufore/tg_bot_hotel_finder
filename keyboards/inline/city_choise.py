@@ -111,8 +111,29 @@ def hotel_founding(data):
 		find = re.search(pattern, response.text)
 		if find:
 			result = json.loads(f"{{{find[0]}}}")
-			if data['is_need_photos'] == 'Да':
-				return result['results']
+			# if data['is_need_photos'] == 'Да':
+			return result['results']
 	else:
 		print('timeout error')
 		return
+
+
+def get_text(data, str_type):
+	if str_type == 'output_data':
+		text = f'<b>{data["name"]}</b>\n' \
+		       f'{data["address"]["postalCode"]}, {data["address"]["countryName"]}, ' \
+		       f'{data["address"]["locality"]}, {data["address"]["streetAddress"]}\n' \
+		       f'Удаленность от центра: {data["landmarks"][0]["distance"]}\n' \
+		       f'Цена: {data["ratePlan"]["price"]["current"]} ' \
+		       f'({data["ratePlan"]["price"].get("fullyBundledPricePerStay", "total ${cur}".format(cur=data["ratePlan"]["price"]["current"]))})'
+		return text
+	elif str_type == 'collected_data_1':
+		text = f'Собранная информация: \n' \
+		       f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
+		       f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
+		return text
+	elif str_type == 'collected_data_2':
+		text = f'Собранная информация: \n' \
+		       f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
+		       f'Нужны ли фото - {data["is_need_photos"]}'
+		return text
