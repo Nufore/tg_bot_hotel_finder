@@ -7,6 +7,7 @@ from telebot.handler_backends import State, StatesGroup
 
 
 class UserInfoState(StatesGroup):
+	sortOrder = State()
 	city = State()
 	number_of_hotels = State()
 	is_need_photos = State()

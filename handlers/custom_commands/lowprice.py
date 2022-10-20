@@ -8,6 +8,9 @@ from keyboards.inline.city_choise import city, hotel_founding, get_photos, get_t
 @bot.message_handler(commands=['lowprice'])
 def lowprice(message: Message) -> None:
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        data['sortOrder'] = 'PRICE'
+
     bot.send_message(message.from_user.id, 'Укажите город, где будет проводиться поиск')
     bot.register_next_step_handler(message, city, bot)
 

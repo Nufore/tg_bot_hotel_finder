@@ -1,1 +1,1 @@
-from . import lowprice
+from . import lowprice, highprice

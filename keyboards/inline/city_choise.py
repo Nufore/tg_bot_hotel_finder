@@ -97,7 +97,7 @@ def hotel_founding(data):
 	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels'],
 	               "checkIn": datetime.date.today(),
 	               "checkOut": datetime.date.today() + datetime.timedelta(days=1),
-	               "adults1": "1", "sortOrder": "PRICE"}
+	               "adults1": "1", "sortOrder": data['sortOrder']}
 
 	headers = {
 		"X-RapidAPI-Key": config.RAPID_API_KEY,
