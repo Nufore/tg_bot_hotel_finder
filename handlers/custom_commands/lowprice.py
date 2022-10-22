@@ -3,16 +3,57 @@ from loader import bot
 from states.lowprice_information import UserInfoState
 from keyboards.reply.lowprice_is_need_photo import request_photo
 from keyboards.inline.city_choise import city, hotel_founding, get_photos, get_text
+from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
+import datetime
 
 
 @bot.message_handler(commands=['lowprice'])
 def lowprice(message: Message) -> None:
+    calendar, step = DetailedTelegramCalendar(calendar_id=1).build()
+    bot.send_message(message.from_user.id,
+                     f"Select {LSTEP[step]}",
+                     reply_markup=calendar)
+
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
         data['sortOrder'] = 'PRICE'
 
-    bot.send_message(message.from_user.id, 'Укажите город, где будет проводиться поиск')
-    bot.register_next_step_handler(message, city, bot)
+    #bot.send_message(message.from_user.id, 'Укажите город, где будет проводиться поиск')
+    #bot.register_next_step_handler(message, city, bot)
+
+
+@bot.callback_query_handler(func=DetailedTelegramCalendar.func(calendar_id=1))
+def calend_checkin(call):
+    result, keyboard, step = DetailedTelegramCalendar(min_date=datetime.date.today(), calendar_id=1).process(call.data)
+    if not result and keyboard:
+        bot.edit_message_text(f"Select {LSTEP[step]}",
+                              call.message.chat.id,
+                              call.message.message_id,
+                              reply_markup=keyboard)
+    elif result:
+        bot.edit_message_text(f"Check-in {result}",
+                              call.message.chat.id,
+                              call.message.message_id)
+        calendar, step = DetailedTelegramCalendar(calendar_id=2).build()
+        bot.send_message(call.message.chat.id,
+                         f"Select {LSTEP[step]}",
+                         reply_markup=calendar)
+        print(result)
+
+
+@bot.callback_query_handler(func=DetailedTelegramCalendar.func(calendar_id=2))
+def calend_checkout(call):
+    result, keyboard, step = DetailedTelegramCalendar(min_date=datetime.date.today(), calendar_id=2).process(call.data)
+    if not result and keyboard:
+        bot.edit_message_text(f"Select {LSTEP[step]}",
+                              call.message.chat.id,
+                              call.message.message_id,
+                              reply_markup=keyboard)
+    elif result:
+        bot.edit_message_text(f"Check-out {result}",
+                              call.message.chat.id,
+                              call.message.message_id)
+        print(result)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.isdigit(), state=UserInfoState.city)
