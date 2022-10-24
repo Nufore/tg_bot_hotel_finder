@@ -85,6 +85,7 @@ def get_photos(endpoint_id, number_of_photos, text):
 			return media
 	else:
 		print('timeout error')
+		return
 
 
 def hotel_founding(data):
@@ -95,8 +96,8 @@ def hotel_founding(data):
 	url = "https://hotels4.p.rapidapi.com/properties/list"
 
 	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels'],
-	               "checkIn": datetime.date.today(),
-	               "checkOut": datetime.date.today() + datetime.timedelta(days=1),
+	               "checkIn": data['checkin'],
+	               "checkOut": data['checkout'],
 	               "adults1": "1", "sortOrder": data['sortOrder']}
 
 	headers = {
@@ -121,11 +122,12 @@ def hotel_founding(data):
 def get_text(data, str_type):
 	if str_type == 'output_data':
 		text = f'<b>{data["name"]}</b>\n' \
-		       f'{data["address"]["postalCode"]}, {data["address"]["countryName"]}, ' \
-		       f'{data["address"]["locality"]}, {data["address"]["streetAddress"]}\n' \
+		       f'{data["address"].get("postalCode", "No postalCode")}, {data["address"]["countryName"]}, ' \
+		       f'{data["address"]["locality"]}, {data["address"].get("streetAddress","No streetAddress")}\n' \
 		       f'Удаленность от центра: {data["landmarks"][0]["distance"]}\n' \
 		       f'Цена: {data["ratePlan"]["price"]["current"]} ' \
-		       f'({data["ratePlan"]["price"].get("fullyBundledPricePerStay", "total ${cur}".format(cur=data["ratePlan"]["price"]["current"]))})'
+		       f'({data["ratePlan"]["price"].get("fullyBundledPricePerStay", "total ${cur}".format(cur=data["ratePlan"]["price"]["current"]))})\n' \
+			   f'https://www.hotels.com/ho{data["id"]}'.replace("&nbsp;", " ")
 		return text
 	elif str_type == 'collected_data_1':
 		text = f'Собранная информация: \n' \
