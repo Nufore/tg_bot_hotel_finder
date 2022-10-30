@@ -1,1 +1,1 @@
-from . import lowprice_is_need_photo
+from . import is_need_photo

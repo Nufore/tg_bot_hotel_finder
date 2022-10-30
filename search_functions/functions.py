@@ -1,9 +1,17 @@
 import json
 import re
 import requests
+import types
 from config_data import config
 from telebot.types import InputMediaPhoto
 
+
+def str_bytes_check(entity: dict):
+	str_c = re.sub("</span>", '', re.sub("<span class='highlighted'>", '', entity['caption']))
+	if len(str_c.format('utf-8')) + len(entity['destinationId'].format('utf-8')) > 64:
+		return entity.get('name', '???')
+	else:
+		return str_c
 
 def city_founding(message):
 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"
@@ -22,7 +30,7 @@ def city_founding(message):
 		cities = list()
 		suggestions = json.loads(f"{{{find[0]}}}")
 		for dest_id in suggestions['entities']:  # Обрабатываем результат
-			clear_destination = re.sub("</span>", '', re.sub("<span class='highlighted'>", '', dest_id['caption']))
+			clear_destination = str_bytes_check(dest_id)
 			cities.append({'city_name': clear_destination,
 			               'destination_id': dest_id['destinationId']
 			               }

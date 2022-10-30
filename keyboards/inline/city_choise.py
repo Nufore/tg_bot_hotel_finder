@@ -1,4 +1,4 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from search_functions.functions import city_founding
 
 
@@ -9,7 +9,7 @@ def city_markup(message):
 		destinations = InlineKeyboardMarkup()
 		for city in cities:
 			destinations.add(InlineKeyboardButton(text=city['city_name'],
-			                                      callback_data=f'{city["destination_id"]}'))
+			                                      callback_data=f'{city["city_name"]}|{city["destination_id"]}'))
 		return destinations
 	return
 

@@ -1,9 +1,9 @@
 from loader import bot
 from telebot.types import Message, ReplyKeyboardRemove
-from states.lowprice_information import UserInfoState
+from states.state_information import UserInfoState
 from search_functions.functions import hotel_founding, get_photos, get_text
 from keyboards.inline.get_numbers import get_number
-from keyboards.reply.lowprice_is_need_photo import request_photo
+from keyboards.reply.is_need_photo import request_photo
 
 
 @bot.message_handler(state=UserInfoState.number_of_hotels)
