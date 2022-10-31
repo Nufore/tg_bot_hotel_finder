@@ -2,8 +2,7 @@ from telebot.types import Message
 from loader import bot
 from states.state_information import UserInfoState
 from keyboards.inline.city_choise import city
-# from handlers.callback_handlers import callback_query_handlers
-# from handlers.message_handlers import message_handlers
+from handlers import message_handlers
 
 
 @bot.message_handler(commands=['lowprice'])

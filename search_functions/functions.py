@@ -1,7 +1,6 @@
 import json
 import re
 import requests
-import types
 from config_data import config
 from telebot.types import InputMediaPhoto
 
@@ -12,6 +11,7 @@ def str_bytes_check(entity: dict):
 		return entity.get('name', '???')
 	else:
 		return str_c
+
 
 def city_founding(message):
 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"

@@ -1,4 +1,5 @@
 from loader import bot
+from config_data.config import NO_PHOTO
 from telebot.types import Message, ReplyKeyboardRemove
 from states.state_information import UserInfoState
 from search_functions.functions import hotel_founding, get_photos, get_text
@@ -9,13 +10,15 @@ from keyboards.reply.is_need_photo import request_photo
 @bot.message_handler(state=UserInfoState.number_of_hotels)
 def get_number_of_hotels(message: Message) -> None:
     if message.text.isdigit() and int(message.text) > 0:
-        bot.send_message(message.from_user.id,
-                         'Кол-во отелей записал.\nНужно ли выводить фото для каждого отеля?',
-                         reply_markup=request_photo())
+        bot.send_message(message.from_user.id, f"Кол-во отелей: {message.text}")
         bot.set_state(message.from_user.id, UserInfoState.is_need_photos, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['number_of_hotels'] = message.text
+
+        bot.send_message(message.from_user.id, 'Нужно ли выводить фото для каждого отеля?',
+                         reply_markup=request_photo())
+
     else:
         bot.send_message(message.from_user.id, 'Введите число отелей для поиска отличное от нуля')
 
@@ -41,7 +44,7 @@ def get_is_need_photos(message: Message) -> None:
         if result:
             for res in result:
                 text = get_text(res, 'output_data')
-                bot.send_message(message.from_user.id, text, parse_mode='HTML')
+                bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 
@@ -69,8 +72,11 @@ def get_number_of_photos(message: Message) -> None:
                     media = get_photos(res["id"], int(data["number_of_photos"]), text)
                     bot.send_media_group(message.from_user.id, media=media)
                 except Exception as e:
-                    print('bot.send_media_group')
-                    bot.send_message(message.from_user.id, 'Не удалось выгрузить фото отеля\n' + text, parse_mode='HTML')
+                    print(e.__str__())
+                    bot.send_photo(message.from_user.id,
+                                   photo=open(file=NO_PHOTO, mode='rb'),
+                                   caption=text,
+                                   parse_mode='HTML')
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 

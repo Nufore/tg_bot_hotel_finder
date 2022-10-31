@@ -1,6 +1,6 @@
 import datetime
 from loader import bot
-from config_data.config import LSTEP
+from config_data.config import LSTEP, NO_PHOTO
 from telebot.types import CallbackQuery
 from telegram_bot_calendar import DetailedTelegramCalendar
 from states.state_information import UserInfoState
@@ -119,9 +119,11 @@ def get_numbers_p(call: CallbackQuery):
                 media = get_photos(res["id"], int(data["number_of_photos"]), text)
                 bot.send_media_group(call.from_user.id, media=media)
             except Exception as e:
-                print('bot.send_media_group failed')
-                bot.send_message(call.from_user.id, 'Не удалось выгрузить фото отеля\n' + text,
-                                 parse_mode='HTML', disable_web_page_preview=True)
+                print(e.__str__())
+                bot.send_photo(call.from_user.id,
+                               photo=open(file=NO_PHOTO, mode='rb'),
+                               caption=text,
+                               parse_mode='HTML')
     else:
         bot.send_message(call.from_user.id, 'Request data not found :(')
 
