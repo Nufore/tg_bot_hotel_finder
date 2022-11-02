@@ -18,7 +18,7 @@ def get_specify_city(call: CallbackQuery):
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
         data['city'] = call.data.split('|')[-1]
 
-    calendar, step = DetailedTelegramCalendar(calendar_id=1).build()
+    calendar, step = DetailedTelegramCalendar(calendar_id=1, locale='ru').build()
     bot.send_message(call.from_user.id,
                      f"Введите дату заезда\nУкажите {LSTEP[step]}",
                      reply_markup=calendar)
@@ -26,7 +26,9 @@ def get_specify_city(call: CallbackQuery):
 
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func(calendar_id=1))
 def calend_checkin(call: CallbackQuery):
-    result, keyboard, step = DetailedTelegramCalendar(min_date=datetime.date.today(), calendar_id=1).process(call.data)
+    result, keyboard, step = DetailedTelegramCalendar(min_date=datetime.date.today(),
+                                                      calendar_id=1,
+                                                      locale='ru').process(call.data)
     if not result and keyboard:
         bot.edit_message_text(f"Введите дату заезда\nУкажите {LSTEP[step]}",
                               call.message.chat.id,
@@ -35,7 +37,7 @@ def calend_checkin(call: CallbackQuery):
     elif result:
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             data['checkin'] = result
-        calendar, step = DetailedTelegramCalendar(calendar_id=2).build()
+        calendar, step = DetailedTelegramCalendar(calendar_id=2, locale='ru').build()
         bot.edit_message_text(f"Дата заезда {result}\nВведите дату выезда\nУкажите {LSTEP[step]}",
                               call.message.chat.id,
                               call.message.message_id, reply_markup=calendar)
@@ -47,7 +49,8 @@ def calend_checkout(call: CallbackQuery):
         min_date = data['checkin']
 
     result, keyboard, step = DetailedTelegramCalendar(min_date=min_date + datetime.timedelta(days=1),
-                                                      calendar_id=2).process(call.data)
+                                                      calendar_id=2,
+                                                      locale='ru').process(call.data)
     if not result and keyboard:
         bot.edit_message_text(f"Дата заезда {min_date}\nВведите дату выезда\nУкажите {LSTEP[step]}",
                               call.message.chat.id,
