@@ -16,7 +16,7 @@ def str_bytes_check(entity: dict):
 def city_founding(message):
 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"
 
-	querystring = {"query": message}  # TODO проработать локализацию "locale": "ru_RU"
+	querystring = {"query": message, "locale": "ru_RU"}  # TODO проработать локализацию "locale": "ru_RU"
 
 	headers = {
 		"X-RapidAPI-Key": config.RAPID_API_KEY,

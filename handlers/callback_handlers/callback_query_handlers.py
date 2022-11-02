@@ -9,14 +9,16 @@ from keyboards.inline.get_numbers import get_number
 from keyboards.inline.yes_no_btn import yes_no
 
 
-@bot.callback_query_handler(func=lambda call: call.data.split('|')[-1].isdigit(), state=UserInfoState.city)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('key'), state=UserInfoState.city)
 def get_specify_city(call: CallbackQuery):
     bot.answer_callback_query(call.id)
-    bot.edit_message_text(f'Локация: {call.data.split("|")[0]}', call.message.chat.id,
-                          call.message.message_id)
-
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-        data['city'] = call.data.split('|')[-1]
+        loc_name = data['hotels_key'][call.data].split('|')[0]
+        loc_id = data['hotels_key'][call.data].split('|')[-1]
+    del data['hotels_key']
+    data['city'] = loc_id
+    bot.edit_message_text(f'Локация: {loc_name}', call.message.chat.id,
+                          call.message.message_id)
 
     calendar, step = DetailedTelegramCalendar(calendar_id=1, locale='ru').build()
     bot.send_message(call.from_user.id,
