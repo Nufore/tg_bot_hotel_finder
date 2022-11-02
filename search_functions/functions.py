@@ -16,7 +16,7 @@ def str_bytes_check(entity: dict):
 def city_founding(message):
 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"
 
-	querystring = {"query": message}
+	querystring = {"query": message}  # TODO проработать локализацию "locale": "ru_RU"
 
 	headers = {
 		"X-RapidAPI-Key": config.RAPID_API_KEY,
@@ -63,10 +63,8 @@ def get_photos(endpoint_id, number_of_photos, text):
 				if media:
 					media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')))
 				else:
-					media.append(
-						InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
-						                caption=text, parse_mode='HTML')
-					)
+					media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
+					                             caption=text, parse_mode='HTML'))
 			return media
 	else:
 		print('timeout error')
@@ -75,12 +73,12 @@ def get_photos(endpoint_id, number_of_photos, text):
 
 def hotel_founding(data):
 	max_number = 10
-	if int(data['number_of_hotels']) > max_number:
-		data['number_of_hotels'] = str(max_number)
+	if int(data['number_of_hotels']['data']) > max_number:
+		data['number_of_hotels']['data'] = str(max_number)
 
 	url = "https://hotels4.p.rapidapi.com/properties/list"
 
-	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels'],
+	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels']['data'],
 	               "checkIn": data['checkin'],
 	               "checkOut": data['checkout'],
 	               "adults1": "1", "sortOrder": data['sortOrder']}
@@ -103,23 +101,23 @@ def hotel_founding(data):
 		return
 
 
-def get_text(data, str_type):
-	if str_type == 'output_data':
-		text = f'<b>{data["name"]}</b>\n' \
-		       f'{data["address"].get("postalCode", "No postalCode")}, {data["address"]["countryName"]}, ' \
-		       f'{data["address"]["locality"]}, {data["address"].get("streetAddress","No streetAddress")}\n' \
-		       f'Удаленность от центра: {data["landmarks"][0]["distance"]}\n' \
-		       f'Цена: {data["ratePlan"]["price"]["current"]} ' \
-		       f'({data["ratePlan"]["price"].get("fullyBundledPricePerStay", "total ${cur}".format(cur=data["ratePlan"]["price"]["current"]))})\n' \
-			   f'https://www.hotels.com/ho{data["id"]}'.replace("&nbsp;", " ")
-		return text
-	elif str_type == 'collected_data_1':
-		text = f'Собранная информация: \n' \
-		       f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
-		       f'Нужны ли фото - {data["is_need_photos"]}\nКол-во фото - {data["number_of_photos"]}'
-		return text
-	elif str_type == 'collected_data_2':
-		text = f'Собранная информация: \n' \
-		       f'Город - {data["city"]}\nКол-во отелей - {data["number_of_hotels"]}\n' \
-		       f'Нужны ли фото - {data["is_need_photos"]}'
-		return text
+def get_text(data):
+	name = data["name"]
+	postalCode = data["address"].get("postalCode", "No postalCode")
+	countryName = data["address"]["countryName"]
+	locality = data["address"]["locality"]
+	streetAddress = data["address"].get("streetAddress", "No streetAddress")
+	distance = data["landmarks"][0]["distance"]
+	currentPrice = data["ratePlan"]["price"]["current"]
+	fullyBundledPricePerStay = data["ratePlan"]["price"].get(
+		"fullyBundledPricePerStay",
+		"total ${cur}".format(cur=data["ratePlan"]["price"]["current"]))
+	site_id = data["id"]
+	text = f'<b>{name}</b>\n' \
+	       f'{postalCode}, {countryName}, ' \
+	       f'{locality}, {streetAddress}\n' \
+	       f'Удаленность от центра: {distance}\n' \
+	       f'Цена: {currentPrice} ' \
+	       f'({fullyBundledPricePerStay})\n' \
+	       f'https://www.hotels.com/ho{site_id}'.replace("&nbsp;", " ")
+	return text

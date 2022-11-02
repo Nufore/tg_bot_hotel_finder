@@ -8,7 +8,7 @@ def city_markup(message):
 		# Функция "city_founding" уже возвращает список словарей с нужным именем и id
 		destinations = InlineKeyboardMarkup()
 		for city in cities:
-			destinations.add(InlineKeyboardButton(text=city['city_name'],
+			destinations.add(InlineKeyboardButton(text=city["city_name"],
 			                                      callback_data=f'{city["city_name"]}|{city["destination_id"]}'))
 		return destinations
 	return

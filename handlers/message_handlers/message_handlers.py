@@ -10,14 +10,17 @@ from keyboards.reply.is_need_photo import request_photo
 @bot.message_handler(state=UserInfoState.number_of_hotels)
 def get_number_of_hotels(message: Message) -> None:
     if message.text.isdigit() and int(message.text) > 0:
-        bot.send_message(message.from_user.id, f"Кол-во отелей: {message.text}")
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            data['number_of_hotels']['data'] = message.text
+
+        bot.edit_message_text('Укажите кол-во отелей', message.chat.id, data['number_of_hotels']['message_id'])
         bot.set_state(message.from_user.id, UserInfoState.is_need_photos, message.chat.id)
 
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['number_of_hotels'] = message.text
-
-        bot.send_message(message.from_user.id, 'Нужно ли выводить фото для каждого отеля?',
-                         reply_markup=request_photo())
+        message_id = bot.send_message(message.from_user.id, 'Нужно ли выводить фото для каждого отеля?',
+                                      reply_markup=request_photo())
+        data['is_need_photos'] = {'data': None,
+                                  'message_id': message_id.message_id,
+                                  'markup': 'reply'}
 
     else:
         bot.send_message(message.from_user.id, 'Введите число отелей для поиска отличное от нуля')
@@ -26,24 +29,25 @@ def get_number_of_hotels(message: Message) -> None:
 @bot.message_handler(content_types=['text'], state=UserInfoState.is_need_photos)
 def get_is_need_photos(message: Message) -> None:
     if message.text.isalpha() and message.text == 'Да':
-        bot.set_state(message.from_user.id, UserInfoState.number_of_photos, message.chat.id)
-        bot.send_message(message.from_user.id, 'Нужны ли фото записал.', reply_markup=ReplyKeyboardRemove())
-        bot.send_message(message.from_user.id, 'Укажите кол-во фото для каждого отеля',
-                         reply_markup=get_number())
-
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['is_need_photos'] = message.text
+            data['is_need_photos']['data'] = message.text
+        if data['is_need_photos']['markup'] == 'inline':
+            bot.edit_message_text("Нужно ли выводить фото для каждого отеля?",
+                                  message.chat.id, data['is_need_photos']['message_id'])
+        bot.set_state(message.from_user.id, UserInfoState.number_of_photos, message.chat.id)
+        message_id = bot.send_message(message.from_user.id, 'Укажите кол-во фото', reply_markup=get_number())
+        data['number_of_photos'] = {'data': None,
+                                    'message_id': message_id.message_id}
 
     elif message.text.isalpha() and message.text == 'Нет':
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['is_need_photos'] = message.text
-        text = get_text(data, 'collected_data_2')
-        bot.send_message(message.from_user.id, text, reply_markup=ReplyKeyboardRemove())
+            data['is_need_photos']['data'] = message.text
+        bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
         result = hotel_founding(data)
         if result:
             for res in result:
-                text = get_text(res, 'output_data')
+                text = get_text(res)
                 bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
@@ -56,20 +60,18 @@ def get_is_need_photos(message: Message) -> None:
 @bot.message_handler(content_types=['text'], state=UserInfoState.number_of_photos)
 def get_number_of_photos(message: Message) -> None:
     if message.text.isdigit() and int(message.text) > 0:
-        bot.send_message(message.from_user.id, 'Кол-во фото записал.')
-
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['number_of_photos'] = message.text
+            data['number_of_photos']['data'] = message.text
 
-        text = get_text(data, 'collected_data_1')
-        bot.send_message(message.from_user.id, text)
+        bot.edit_message_text('Укажите кол-во фото', message.chat.id, data['number_of_photos']['message_id'])
+        bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
         result = hotel_founding(data)
         if result:
             for res in result:
-                text = get_text(res, 'output_data')
+                text = get_text(res)
                 try:
-                    media = get_photos(res["id"], int(data["number_of_photos"]), text)
+                    media = get_photos(res["id"], int(data["number_of_photos"]['data']), text)
                     bot.send_media_group(message.from_user.id, media=media)
                 except Exception as e:
                     print(e.__str__())
