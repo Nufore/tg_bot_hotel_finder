@@ -13,10 +13,14 @@ def str_bytes_check(entity: dict):
 		return str_c
 
 
-def city_founding(message):
+def ru_locale(s: str) -> bool:
+	return bool(re.fullmatch(r'(?i)[а-яё -]+', s))
+
+
+def city_founding(message, locale):
 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"
 
-	querystring = {"query": message, "locale": "ru_RU"}  # TODO проработать локализацию "locale": "ru_RU"
+	querystring = {"query": message, "locale": locale}
 
 	headers = {
 		"X-RapidAPI-Key": config.RAPID_API_KEY,
