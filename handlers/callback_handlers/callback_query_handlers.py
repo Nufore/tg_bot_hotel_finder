@@ -15,6 +15,8 @@ def get_specify_city(call: CallbackQuery):
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
         loc_name = data['hotels_key'][call.data].split('|')[0]
         loc_id = data['hotels_key'][call.data].split('|')[-1]
+        # loc_name = data['hotels_key'][call.data]['city_name']
+        # loc_id = data['hotels_key'][call.data]['destination_id']
     del data['hotels_key']
     data['city'] = loc_id
     bot.edit_message_text(f'Локация: {loc_name}', call.message.chat.id,
