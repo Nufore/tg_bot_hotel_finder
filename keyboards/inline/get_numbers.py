@@ -2,6 +2,10 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def get_number() -> InlineKeyboardMarkup:
+	"""
+	Функция создания inline-клавиатуры для указания количества объектов
+	:return: Возвращает inline-клавиатуру с кнопками от 1 до 10
+	"""
 	keyboard = InlineKeyboardMarkup()
 	key_1 = InlineKeyboardButton(text="1", callback_data="1")
 	key_2 = InlineKeyboardButton(text="2", callback_data="2")

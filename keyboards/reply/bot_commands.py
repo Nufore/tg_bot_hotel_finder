@@ -1,7 +1,11 @@
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 def bot_commands() -> ReplyKeyboardMarkup:
+	"""
+	Функция создания reply-клавиатуры с основными командами бота
+	:return: Возвращает reply-клавиатуру
+	"""
 	lowprice_btn = KeyboardButton('/lowprice')
 	highprice_btn = KeyboardButton('/highprice')
 	bestdeal_btn = KeyboardButton('/bestdeal')

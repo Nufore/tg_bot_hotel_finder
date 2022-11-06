@@ -1,12 +1,26 @@
 from telebot.handler_backends import State, StatesGroup
 
-# 1. Город
-# 2. Кол-во отелей
-# 3. Вывод фото для каждого отеля
-# 4. Кол-во фото
-
 
 class UserInfoState(StatesGroup):
+	"""
+	Класс состояний для сохранения информации вводимой пользователем
+
+	checkin - Дата заезда
+
+	checkout - Дата выезда
+
+	sortOrder - Тип сортировки при поиске отеля
+	[BEST_SELLER|STAR_RATING_HIGHEST_FIRST|STAR_RATING_LOWEST_FIRST|
+	DISTANCE_FROM_LANDMARK|GUEST_RATING|PRICE_HIGHEST_FIRST|PRICE]
+
+	city - Город для поиска. destination_id выбранный пользователем
+
+	number_of_hotels - Количество выводимых отелей
+
+	is_need_photos - Параметр вывода фото. Если да, то выводим
+
+	number_of_photos - Количество выводимых фото
+	"""
 	checkin = State()
 	checkout = State()
 	sortOrder = State()

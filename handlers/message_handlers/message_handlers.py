@@ -9,6 +9,11 @@ from keyboards.reply.is_need_photo import request_photo
 
 @bot.message_handler(state=UserInfoState.number_of_hotels)
 def get_number_of_hotels(message: Message) -> None:
+    """
+    Хендлер, обрабатывающий количество указанных пользователем отелей (пользователь вводил данные с клавиатуры)
+    :param message: Сообщение от пользователя
+    :return:
+    """
     if message.text.isdigit() and int(message.text) > 0:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['number_of_hotels']['data'] = message.text
@@ -28,6 +33,12 @@ def get_number_of_hotels(message: Message) -> None:
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.is_need_photos)
 def get_is_need_photos(message: Message) -> None:
+    """
+    Хендлер, обрабатывающий данные от пользователя по выводу фотографий
+    Если фото не нужны, то выводим собранную информацию по отелям
+    :param message: Сообщение от пользователя
+    :return:
+    """
     if message.text.isalpha() and message.text == 'Да':
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['is_need_photos']['data'] = message.text
@@ -59,6 +70,11 @@ def get_is_need_photos(message: Message) -> None:
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.number_of_photos)
 def get_number_of_photos(message: Message) -> None:
+    """
+    Хендлер обработки количества фото и вывода информации по отелям с фото
+    :param message: Сообщение от пользователя
+    :return:
+    """
     if message.text.isdigit() and int(message.text) > 0:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['number_of_photos']['data'] = message.text
