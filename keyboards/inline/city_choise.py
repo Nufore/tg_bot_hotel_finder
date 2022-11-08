@@ -1,7 +1,7 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from keyboards.reply.bot_commands import bot_commands
-from search_functions.functions import city_founding, ru_locale
+from search_functions.functions import ru_locale, get_request_data
 
 
 def city_markup(message: Message, bot) -> InlineKeyboardMarkup:
@@ -15,7 +15,7 @@ def city_markup(message: Message, bot) -> InlineKeyboardMarkup:
 		locale = 'ru_RU'
 	else:
 		locale = 'en_US'
-	cities = city_founding(message.text, locale)
+	cities = get_request_data(message=message.text, locale=locale)
 	if cities:
 		with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
 			data['hotels_key'] = {}

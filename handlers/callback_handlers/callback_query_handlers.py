@@ -4,7 +4,7 @@ from config_data.config import LSTEP, NO_PHOTO
 from telebot.types import CallbackQuery, ReplyKeyboardRemove
 from telegram_bot_calendar import DetailedTelegramCalendar
 from states.state_information import UserInfoState
-from search_functions.functions import hotel_founding, get_photos, get_text
+from search_functions.functions import get_text, get_request_data
 from keyboards.inline.get_numbers import get_number
 from keyboards.inline.yes_no_btn import yes_no
 
@@ -132,7 +132,7 @@ def get_need_photos(call: CallbackQuery) -> None:
             data['is_need_photos'] = call.data
         bot.edit_message_text(f"Вывод фото: {call.data}", call.message.chat.id, call.message.message_id)
         bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
-        result = hotel_founding(data)
+        result = get_request_data(data=data)
         if result:
             for res in result:
                 text = get_text(res)
@@ -159,12 +159,14 @@ def get_numbers_p(call: CallbackQuery) -> None:
 
     bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-    result = hotel_founding(data)
+    result = get_request_data(data=data)
     if result:
         for res in result:
             text = get_text(res)
             try:
-                media = get_photos(res["id"], int(data["number_of_photos"]['data']), text)
+                media = get_request_data(endpoint_id=res["id"],
+                                         number_of_photos=int(data["number_of_photos"]['data']),
+                                         text=text)
                 bot.send_media_group(call.from_user.id, media=media)
             except Exception as e:
                 print(e.__str__())
