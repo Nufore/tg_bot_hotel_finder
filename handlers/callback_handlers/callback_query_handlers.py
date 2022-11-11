@@ -1,4 +1,5 @@
 import datetime
+
 from loader import bot
 from config_data.config import LSTEP, NO_PHOTO
 from telebot.types import CallbackQuery, ReplyKeyboardRemove
@@ -7,6 +8,7 @@ from states.state_information import UserInfoState
 from search_functions.functions import get_text, get_request_data
 from keyboards.inline.get_numbers import get_number
 from keyboards.inline.yes_no_btn import yes_no
+from keyboards.reply.min_max_price import min_max_price
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('key'), state=UserInfoState.city)
@@ -80,10 +82,18 @@ def calend_checkout(call: CallbackQuery) -> None:
                               call.message.chat.id,
                               call.message.message_id)
         data['checkout'] = result
-        bot.set_state(call.from_user.id, UserInfoState.number_of_hotels, call.message.chat.id)
-        message_id = bot.send_message(call.from_user.id, 'Укажите кол-во отелей', reply_markup=get_number())
-        data['number_of_hotels'] = {'data': None,
-                                    'message_id': message_id.message_id}
+        if data['sortOrder'] == 'DISTANCE_FROM_LANDMARK':
+            bot.set_state(call.from_user.id, UserInfoState.minMaxPrice, call.message.chat.id)
+            message_1_id = bot.send_message(call.from_user.id, 'Укажите диапазон цен',)
+            message_2_id = bot.send_message(call.from_user.id, 'Цена от:', reply_markup=min_max_price(is_min=True))
+            data['min_max_price'] = {'minPrice': None,
+                                     'maxPrice': None,
+                                     'message_id': [message_1_id.message_id, message_2_id.message_id]}
+        else:
+            bot.set_state(call.from_user.id, UserInfoState.number_of_hotels, call.message.chat.id)
+            message_id = bot.send_message(call.from_user.id, 'Укажите кол-во отелей', reply_markup=get_number())
+            data['number_of_hotels'] = {'data': None,
+                                        'message_id': message_id.message_id}
 
 
 @bot.callback_query_handler(func=lambda call: call.data.isdigit(), state=UserInfoState.number_of_hotels)
@@ -131,9 +141,12 @@ def get_need_photos(call: CallbackQuery) -> None:
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             data['is_need_photos'] = call.data
         bot.edit_message_text(f"Вывод фото: {call.data}", call.message.chat.id, call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
+
+        message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
+
         result = get_request_data(data=data)
         if result:
+            bot.delete_message(call.message.chat.id, message_id.message_id)
             for res in result:
                 text = get_text(res)
                 bot.send_message(call.message.chat.id, text, parse_mode='HTML', disable_web_page_preview=True)
@@ -157,10 +170,11 @@ def get_numbers_p(call: CallbackQuery) -> None:
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
         data['number_of_photos']['data'] = call.data
 
-    bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
+    message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
     result = get_request_data(data=data)
     if result:
+        bot.delete_message(call.message.chat.id, message_id.message_id)
         for res in result:
             text = get_text(res)
             try:

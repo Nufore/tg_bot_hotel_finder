@@ -5,6 +5,31 @@ from states.state_information import UserInfoState
 from search_functions.functions import get_text, get_request_data
 from keyboards.inline.get_numbers import get_number
 from keyboards.reply.is_need_photo import request_photo
+from keyboards.reply.min_max_price import min_max_price
+
+
+@bot.message_handler(state=UserInfoState.minMaxPrice)
+def get_min_max_price(message: Message) -> None:
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        if data['min_max_price']['minPrice']:
+            data['min_max_price']['maxPrice'] = message.text
+            bot.delete_message(message.from_user.id, message.id)
+            bot.edit_message_text(f'Диапазон цен: '
+                                  f'{data["min_max_price"]["minPrice"]} - {data["min_max_price"]["maxPrice"]}',
+                                  message.from_user.id,
+                                  data['min_max_price']['message_id'][0])
+            bot.delete_message(message.from_user.id, data['min_max_price']['message_id'][2])
+            bot.send_message(message.from_user.id, 'COOL', reply_markup=ReplyKeyboardRemove())
+        else:
+            data['min_max_price']['minPrice'] = message.text
+            bot.delete_message(message.from_user.id, message.id)
+            bot.edit_message_text(f'Диапазон цен\nЦена от: {data["min_max_price"]["minPrice"]}',
+                                  message.from_user.id,
+                                  data['min_max_price']['message_id'][0])
+            bot.delete_message(message.from_user.id, data['min_max_price']['message_id'][1])
+            message_3_id = bot.send_message(message.from_user.id, 'Цена до:',
+                                            reply_markup=min_max_price(mltp=int(data['min_max_price']['minPrice'])))
+            data['min_max_price']['message_id'].append(message_3_id.message_id)
 
 
 @bot.message_handler(state=UserInfoState.number_of_hotels)

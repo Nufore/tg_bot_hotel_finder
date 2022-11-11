@@ -25,6 +25,7 @@ class UserInfoState(StatesGroup):
 	checkout = State()
 	sortOrder = State()
 	city = State()
+	minMaxPrice = State()
 	number_of_hotels = State()
 	is_need_photos = State()
 	number_of_photos = State()

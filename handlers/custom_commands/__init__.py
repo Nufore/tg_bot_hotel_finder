@@ -1,2 +1,2 @@
-from . import lowprice, highprice
+from . import lowprice, highprice, bestdeal
 from handlers import message_handlers
