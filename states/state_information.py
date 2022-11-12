@@ -26,6 +26,7 @@ class UserInfoState(StatesGroup):
 	sortOrder = State()
 	city = State()
 	minMaxPrice = State()
+	distance = State()
 	number_of_hotels = State()
 	is_need_photos = State()
 	number_of_photos = State()
