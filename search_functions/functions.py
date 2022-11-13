@@ -28,99 +28,6 @@ def ru_locale(s: str) -> bool:
 	return bool(re.fullmatch(r'(?i)[а-яё -]+', s))
 
 
-# def city_founding(message: str, locale: str) -> list | None:
-# 	"""
-# 	Функция поиска локаций для уточнения выбора пользователю
-# 	:param message: Переданное название пользователя при запросе указания города
-# 	:param locale: Параметр языка для поиска ("ru_RU", "en_US")
-# 	:return: Возвращает список словарей с нужным именем и id
-# 	"""
-# 	url = "https://hotels4.p.rapidapi.com/locations/v2/search"
-#
-# 	querystring = {"query": message, "locale": locale}
-#
-# 	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-# 	pattern = r'(?<="CITY_GROUP",).+?[\]]'
-#
-# 	find = re.search(pattern, response.text)
-# 	if find:
-# 		cities = list()
-# 		suggestions = json.loads(f"{{{find[0]}}}")
-# 		for dest_id in suggestions['entities']:  # Обрабатываем результат
-# 			clear_destination = str_bytes_check(dest_id)
-# 			cities.append({'city_name': clear_destination,
-# 			               'destination_id': dest_id['destinationId']
-# 			               }
-# 			              )
-# 		return cities
-# 	return
-#
-#
-# def get_photos(endpoint_id: str, number_of_photos: int, text: str) -> list | None:
-# 	"""
-# 	Функция для поиска фото отеля (максимум 10 фото на каждый отель)
-# 	:param endpoint_id: id отеля
-# 	:param number_of_photos: количество фото для вывода
-# 	:param text: Текст с информацией об отеле
-# 	:return: Возвращает список с элементами InputMediaPhoto для bot.send_media_group
-# 	"""
-# 	if number_of_photos > 10:
-# 		number_of_photos = 10
-# 	url = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
-#
-# 	querystring = {"id": endpoint_id}
-#
-# 	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-#
-# 	if response.status_code == requests.codes.ok:
-# 		pattern = r'(?<=,)"hotelImages":.+?(?=,"roomImages)'
-# 		find = re.search(pattern, response.text)
-# 		if find:
-# 			result = json.loads(f"{{{find[0]}}}")
-# 			media = list()
-# 			for i_photo in range(number_of_photos):
-# 				if media:
-# 					media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')))
-# 				else:
-# 					media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
-# 					                             caption=text, parse_mode='HTML'))
-# 			return media
-# 	else:
-# 		print('timeout error')
-# 		return
-#
-#
-# def hotel_founding(data: list) -> list | None:
-# 	"""
-# 	Функция поиска отелей по указанному городу/локации
-# 	:param data: Список собранно информации от пользователя
-# 	:return: Возвращает список results из searchResults
-# 	при запросе по url = "https://hotels4.p.rapidapi.com/properties/list"
-# 	"""
-# 	max_number = 10
-# 	if int(data['number_of_hotels']['data']) > max_number:
-# 		data['number_of_hotels']['data'] = str(max_number)
-#
-# 	url = "https://hotels4.p.rapidapi.com/properties/list"
-#
-# 	querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels']['data'],
-# 	               "checkIn": data['checkin'],
-# 	               "checkOut": data['checkout'],
-# 	               "adults1": "1", "sortOrder": data['sortOrder']}
-#
-# 	response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-#
-# 	if response.status_code == requests.codes.ok:
-# 		pattern = r'(?<=,)"results":.+?(?=,"pagination)'
-# 		find = re.search(pattern, response.text)
-# 		if find:
-# 			result = json.loads(f"{{{find[0]}}}")
-# 			return result['results']
-# 	else:
-# 		print('timeout error')
-# 		return
-
-
 def get_text(data: dict) -> str:
 	"""
 	Функция формирования информации об отеле (подписи к фотографиям отеля)
@@ -226,10 +133,25 @@ def get_request_data(
 
 		url = "https://hotels4.p.rapidapi.com/properties/list"
 
-		querystring = {"destinationId": data['city'], "pageNumber": "1", "pageSize": data['number_of_hotels']['data'],
-		               "checkIn": data['checkin'],
-		               "checkOut": data['checkout'],
-		               "adults1": "1", "sortOrder": data['sortOrder']}
+		if data['distance']['distance']:
+			querystring = {"destinationId": data['city'],
+			               "pageNumber": "1",
+			               "pageSize": "25",  # data['number_of_hotels']['data'],
+			               "checkIn": data['checkin'],
+			               "checkOut": data['checkout'],
+			               "adults1": "1",
+			               "priceMin": str(data['min_max_price']['minPrice']),
+			               "priceMax": str(data['min_max_price']['maxPrice']),
+			               "sortOrder": data['sortOrder'],
+			               "landmarkIds": "City center"}
+		else:
+			querystring = {"destinationId": data['city'],
+			               "pageNumber": "1",
+			               "pageSize": data['number_of_hotels']['data'],
+			               "checkIn": data['checkin'],
+			               "checkOut": data['checkout'],
+			               "adults1": "1",
+			               "sortOrder": data['sortOrder']}
 
 		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 

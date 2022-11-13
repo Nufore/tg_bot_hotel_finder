@@ -10,40 +10,100 @@ from keyboards.reply.min_max_price import min_max_price
 
 @bot.message_handler(state=UserInfoState.minMaxPrice)
 def get_min_max_price(message: Message) -> None:
-    if message.text.isdigit() and int(message.text) > 0:
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            if data['min_max_price']['minPrice'] and (int(message.text) >= int(data['min_max_price']['minPrice'])):
-                data['min_max_price']['maxPrice'] = message.text
-                bot.delete_message(message.from_user.id, message.id)
-                for i in reversed(range(1, len(data['min_max_price']['message_id']))):
-                    bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(i))
-                bot.edit_message_text(f'Диапазон цен: '
-                                      f'{data["min_max_price"]["minPrice"]}-{data["min_max_price"]["maxPrice"]}$',
-                                      message.from_user.id,
-                                      data['min_max_price']['message_id'][0])
-                bot.set_state(message.from_user.id, UserInfoState.distance, message.chat.id)
-                bot.send_message(message.from_user.id, 'COOL', reply_markup=ReplyKeyboardRemove())
-            elif not data['min_max_price']['minPrice']:
-                data['min_max_price']['minPrice'] = message.text
-                bot.delete_message(message.from_user.id, message.id)
-                for i in reversed(range(2, len(data['min_max_price']['message_id']))):
-                    bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(i))
-                bot.edit_message_text(f'Диапазон цен\nЦена от: {data["min_max_price"]["minPrice"]}',
-                                      message.from_user.id,
-                                      data['min_max_price']['message_id'][0])
-                bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(1))
-                message_3_id = bot.send_message(message.from_user.id, 'Цена до:',
-                                                reply_markup=min_max_price(mltp=int(data['min_max_price']['minPrice'])))
-                data['min_max_price']['message_id'].append(message_3_id.message_id)
-            else:
+    """
+    Хендлер, обработка данных по вводу диапазона цен для команды /highprice
+    :param message: Сообщение от пользователя
+    :return:
+    """
+    try:
+        message_text = float(message.text.replace(',', '.'))
+        if message_text > 0:
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                if data['min_max_price']['minPrice'] and (message_text >= data['min_max_price']['minPrice']):
+                    data['min_max_price']['maxPrice'] = message_text
+
+                    bot.delete_message(message.from_user.id, message.id)
+                    for i in reversed(range(1, len(data['min_max_price']['message_id']))):
+                        bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(i))
+
+                    bot.edit_message_text(f'Диапазон цен: '
+                                          f'{data["min_max_price"]["minPrice"]}-{data["min_max_price"]["maxPrice"]}$',
+                                          message.from_user.id,
+                                          data['min_max_price']['message_id'][0])
+
+                    bot.set_state(message.from_user.id, UserInfoState.distance, message.chat.id)
+                    bot_message = bot.send_message(message.from_user.id, 'Укажите максимальное расстояние от центра:')
+                    ReplyKeyboardRemove()
+                    data['distance'] = {'distance': None,
+                                        'message_id': [bot_message.message_id]}
+
+                elif not data['min_max_price']['minPrice']:
+                    data['min_max_price']['minPrice'] = message_text
+
+                    bot.delete_message(message.from_user.id, message.id)
+                    for i in reversed(range(2, len(data['min_max_price']['message_id']))):
+                        bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(i))
+
+                    bot.edit_message_text(f'Диапазон цен\nЦена от: {data["min_max_price"]["minPrice"]}',
+                                          message.from_user.id,
+                                          data['min_max_price']['message_id'][0])
+
+                    bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(1))
+                    message_3_id = bot.send_message(message.from_user.id, 'Цена до:',
+                                                    reply_markup=min_max_price(
+                                                        mltp=data['min_max_price']['minPrice']))
+                    data['min_max_price']['message_id'].append(message_3_id.message_id)
+                else:
+                    data['min_max_price']['message_id'].append(message.message_id)
+                    bot_message = bot.send_message(message.from_user.id,
+                                                   'Максимальная цена должна быть больше минимальной')
+                    data['min_max_price']['message_id'].append(bot_message.message_id)
+        else:
+            bot_message = bot.send_message(message.from_user.id, 'Укажите цену больше 0')
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['min_max_price']['message_id'].append(message.message_id)
-                bot_message = bot.send_message(message.from_user.id, 'Максимальная цена должна быть больше минимальной')
                 data['min_max_price']['message_id'].append(bot_message.message_id)
-    else:
-        bot_message = bot.send_message(message.from_user.id, 'Укажите цену больше 0')
+    except ValueError:
+        bot_message = bot.send_message(message.from_user.id, 'Укажите число в форматах 0.1 / 0,1 / 1 / 10')
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['min_max_price']['message_id'].append(message.message_id)
             data['min_max_price']['message_id'].append(bot_message.message_id)
+
+
+@bot.message_handler(state=UserInfoState.distance)
+def get_distance(message: Message) -> None:
+    """
+    Хендлер, обработка данных по вводу максимального расстояния от центра для команды /highprice
+    :param message: Сообщение от пользователя
+    :return:
+    """
+    try:
+        message_text = float(message.text.replace(',', '.'))
+        if message_text > 0:
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['distance']['distance'] = message_text
+            bot.delete_message(message.from_user.id, message.id)
+            for i in reversed(range(1, len(data['distance']['message_id']))):
+                bot.delete_message(message.from_user.id, data['distance']['message_id'].pop(i))
+
+            bot.edit_message_text(f'Максимальное расстояние от центра: {data["distance"]["distance"]}',
+                                  message.from_user.id,
+                                  data['distance']['message_id'][0])
+
+            bot.set_state(message.from_user.id, UserInfoState.number_of_hotels, message.chat.id)
+            message_id = bot.send_message(message.from_user.id, 'Укажите кол-во отелей', reply_markup=get_number())
+            data['number_of_hotels'] = {'data': None,
+                                        'message_id': message_id.message_id}
+        else:
+            bot_message = bot.send_message(message.from_user.id, 'Укажите расстояние больше 0')
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['distance']['message_id'].append(message.message_id)
+                data['distance']['message_id'].append(bot_message.message_id)
+    except ValueError:
+        bot_message = bot.send_message(message.from_user.id, 'Укажите число в форматах 0.1 / 0,1 / 1 / 10')
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            data['distance']['message_id'].append(message.message_id)
+            data['distance']['message_id'].append(bot_message.message_id)
 
 
 @bot.message_handler(state=UserInfoState.number_of_hotels)
@@ -94,7 +154,18 @@ def get_is_need_photos(message: Message) -> None:
             data['is_need_photos']['data'] = message.text
         bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        result = get_request_data(data=data)
+        if data["distance"]["distance"]:
+            result = [res for res in get_request_data(data=data)
+                      if float(res["landmarks"][0]["distance"].replace(' miles', ''))
+                      <= data["distance"]["distance"] and
+                      data['min_max_price']['minPrice']
+                      <= res["ratePlan"]["price"]["exactCurrent"]
+                      <= data['min_max_price']['maxPrice']]
+            if len(result) > int(data["number_of_hotels"]["data"]):
+                result = result[0:int(data["number_of_hotels"]["data"])]
+        else:
+            result = get_request_data(data=data)
+
         if result:
             for res in result:
                 text = get_text(res)

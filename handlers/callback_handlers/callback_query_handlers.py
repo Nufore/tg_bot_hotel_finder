@@ -27,7 +27,7 @@ def get_specify_city(call: CallbackQuery) -> None:
     bot.edit_message_text(f'Локация: {loc_name}', call.message.chat.id,
                           call.message.message_id)
 
-    calendar, step = DetailedTelegramCalendar(calendar_id=1, locale='ru').build()
+    calendar, step = DetailedTelegramCalendar(min_date=datetime.date.today(), calendar_id=1, locale='ru').build()
     bot.send_message(call.from_user.id,
                      f"Введите дату заезда\nУкажите {LSTEP[step]}",
                      reply_markup=calendar)
@@ -52,7 +52,8 @@ def calend_checkin(call: CallbackQuery) -> None:
     elif result:
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             data['checkin'] = result
-        calendar, step = DetailedTelegramCalendar(calendar_id=2, locale='ru').build()
+        calendar, step = DetailedTelegramCalendar(min_date=data['checkin'] + datetime.timedelta(days=1),
+                                                  calendar_id=2, locale='ru').build()
         bot.edit_message_text(f"Дата заезда {result}\nВведите дату выезда\nУкажите {LSTEP[step]}",
                               call.message.chat.id,
                               call.message.message_id, reply_markup=calendar)

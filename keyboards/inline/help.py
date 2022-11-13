@@ -7,6 +7,6 @@ def inline_help() -> InlineKeyboardMarkup:
 	:return: Возвращает inline-клавиатуру с кнопкой HELP
 	"""
 	keyboard = InlineKeyboardMarkup()
-	key_1 = InlineKeyboardButton(text="❔HELP❔", callback_data="/help")
+	key_1 = InlineKeyboardButton(text="HELP", callback_data="/help")
 	keyboard.add(key_1)
 	return keyboard

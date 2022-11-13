@@ -13,5 +13,5 @@ def bot_start(message: Message) -> None:
     """
     bot.send_message(message.from_user.id,
                      f"Привет, {message.from_user.full_name}!\n"
-                     "Я бот по поиску отелей. Чтобы посмотреть, что я умею нажми на /help",
+                     "Я бот по поиску отелей. Чтобы посмотреть, что я умею - нажми на /help",
                      reply_markup=inline_help())
