@@ -88,18 +88,21 @@ def get_request_data(
 		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 		pattern = r'(?<="CITY_GROUP",).+?[\]]'
 
-		find = re.search(pattern, response.text)
-		if find:
-			cities = list()
-			suggestions = json.loads(f"{{{find[0]}}}")
-			for dest_id in suggestions['entities']:  # Обрабатываем результат
-				clear_destination = str_bytes_check(dest_id)
-				cities.append({'city_name': clear_destination,
-				               'destination_id': dest_id['destinationId']
-				               }
-				              )
-			return cities
-		return
+		if response.status_code == requests.codes.ok:
+			find = re.search(pattern, response.text)
+			if find:
+				cities = list()
+				suggestions = json.loads(f"{{{find[0]}}}")
+				for dest_id in suggestions['entities']:  # Обрабатываем результат
+					clear_destination = str_bytes_check(dest_id)
+					cities.append({'city_name': clear_destination,
+					               'destination_id': dest_id['destinationId']
+					               }
+					              )
+				return cities
+		else:
+			print('timeout error')
+			return
 
 	elif endpoint_id and number_of_photos and text:
 		if number_of_photos > 10:

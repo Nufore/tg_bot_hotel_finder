@@ -156,7 +156,7 @@ def get_is_need_photos(message: Message) -> None:
 
         if data["distance"]["distance"]:
             result = [res for res in get_request_data(data=data)
-                      if float(res["landmarks"][0]["distance"].replace(' miles', ''))
+                      if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
                       <= data["distance"]["distance"] and
                       data['min_max_price']['minPrice']
                       <= res["ratePlan"]["price"]["exactCurrent"]
@@ -192,7 +192,17 @@ def get_number_of_photos(message: Message) -> None:
         bot.edit_message_text('Укажите кол-во фото', message.chat.id, data['number_of_photos']['message_id'])
         bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        result = get_request_data(data=data)
+        if data["distance"]["distance"]:
+            result = [res for res in get_request_data(data=data)
+                      if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
+                      <= data["distance"]["distance"] and
+                      data['min_max_price']['minPrice']
+                      <= res["ratePlan"]["price"]["exactCurrent"]
+                      <= data['min_max_price']['maxPrice']]
+            if len(result) > int(data["number_of_hotels"]["data"]):
+                result = result[0:int(data["number_of_hotels"]["data"])]
+        else:
+            result = get_request_data(data=data)
         if result:
             for res in result:
                 text = get_text(res)

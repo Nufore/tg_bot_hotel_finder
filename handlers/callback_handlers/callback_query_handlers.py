@@ -145,7 +145,17 @@ def get_need_photos(call: CallbackQuery) -> None:
 
         message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        result = get_request_data(data=data)
+        if data["distance"]["distance"]:
+            result = [res for res in get_request_data(data=data)
+                      if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
+                      <= data["distance"]["distance"] and
+                      data['min_max_price']['minPrice']
+                      <= res["ratePlan"]["price"]["exactCurrent"]
+                      <= data['min_max_price']['maxPrice']]
+            if len(result) > int(data["number_of_hotels"]["data"]):
+                result = result[0:int(data["number_of_hotels"]["data"])]
+        else:
+            result = get_request_data(data=data)
         if result:
             bot.delete_message(call.message.chat.id, message_id.message_id)
             for res in result:
@@ -173,7 +183,17 @@ def get_numbers_p(call: CallbackQuery) -> None:
 
     message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-    result = get_request_data(data=data)
+    if data["distance"]["distance"]:
+        result = [res for res in get_request_data(data=data)
+                  if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
+                  <= data["distance"]["distance"] and
+                  data['min_max_price']['minPrice']
+                  <= res["ratePlan"]["price"]["exactCurrent"]
+                  <= data['min_max_price']['maxPrice']]
+        if len(result) > int(data["number_of_hotels"]["data"]):
+            result = result[0:int(data["number_of_hotels"]["data"])]
+    else:
+        result = get_request_data(data=data)
     if result:
         bot.delete_message(call.message.chat.id, message_id.message_id)
         for res in result:
@@ -190,6 +210,6 @@ def get_numbers_p(call: CallbackQuery) -> None:
                                caption=text,
                                parse_mode='HTML')
     else:
-        bot.send_message(call.from_user.id, 'Request data not found :(')
+        bot.send_message(call.from_user.id, 'Не удалось найти отели по запрашиваемым параметрам.')
 
     bot.delete_state(call.from_user.id, call.message.chat.id)
