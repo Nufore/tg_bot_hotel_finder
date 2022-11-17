@@ -1,5 +1,6 @@
 import datetime
 
+from database.db_connect import save_history_data
 from loader import bot
 from config_data.config import LSTEP, NO_PHOTO
 from telebot.types import CallbackQuery, ReplyKeyboardRemove
@@ -145,7 +146,7 @@ def get_need_photos(call: CallbackQuery) -> None:
 
         message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        if data["distance"]["distance"]:
+        if data.get("distance", None):
             result = [res for res in get_request_data(data=data)
                       if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
                       <= data["distance"]["distance"] and
@@ -156,11 +157,15 @@ def get_need_photos(call: CallbackQuery) -> None:
                 result = result[0:int(data["number_of_hotels"]["data"])]
         else:
             result = get_request_data(data=data)
+
         if result:
+            hotels_list = []
             bot.delete_message(call.message.chat.id, message_id.message_id)
             for res in result:
+                hotels_list.append(res["name"])
                 text = get_text(res)
                 bot.send_message(call.message.chat.id, text, parse_mode='HTML', disable_web_page_preview=True)
+            save_history_data(user_id=call.from_user.id, command=data["sortOrder"], hotels=hotels_list)
         else:
             bot.send_message(call.message.chat.id, 'Request data not found :(')
 
@@ -183,7 +188,7 @@ def get_numbers_p(call: CallbackQuery) -> None:
 
     message_id = bot.send_message(call.message.chat.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-    if data["distance"]["distance"]:
+    if data.get("distance", None):
         result = [res for res in get_request_data(data=data)
                   if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
                   <= data["distance"]["distance"] and
@@ -194,9 +199,12 @@ def get_numbers_p(call: CallbackQuery) -> None:
             result = result[0:int(data["number_of_hotels"]["data"])]
     else:
         result = get_request_data(data=data)
+
     if result:
         bot.delete_message(call.message.chat.id, message_id.message_id)
+        hotels_list = []
         for res in result:
+            hotels_list.append(res["name"])
             text = get_text(res)
             try:
                 media = get_request_data(endpoint_id=res["id"],
@@ -209,6 +217,7 @@ def get_numbers_p(call: CallbackQuery) -> None:
                                photo=open(file=NO_PHOTO, mode='rb'),
                                caption=text,
                                parse_mode='HTML')
+        save_history_data(user_id=call.from_user.id, command=data["sortOrder"], hotels=hotels_list)
     else:
         bot.send_message(call.from_user.id, 'Не удалось найти отели по запрашиваемым параметрам.')
 

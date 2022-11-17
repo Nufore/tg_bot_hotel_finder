@@ -1,3 +1,4 @@
+from database.db_connect import save_history_data
 from loader import bot
 from config_data.config import NO_PHOTO
 from telebot.types import Message, ReplyKeyboardRemove
@@ -154,7 +155,7 @@ def get_is_need_photos(message: Message) -> None:
             data['is_need_photos']['data'] = message.text
         bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        if data["distance"]["distance"]:
+        if data.get("distance", None):
             result = [res for res in get_request_data(data=data)
                       if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
                       <= data["distance"]["distance"] and
@@ -167,9 +168,12 @@ def get_is_need_photos(message: Message) -> None:
             result = get_request_data(data=data)
 
         if result:
+            hotels_list = []
             for res in result:
+                hotels_list.append(res["name"])
                 text = get_text(res)
                 bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
+            save_history_data(user_id=message.from_user.id, command=data["sortOrder"], hotels=hotels_list)
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 
@@ -192,7 +196,7 @@ def get_number_of_photos(message: Message) -> None:
         bot.edit_message_text('Укажите кол-во фото', message.chat.id, data['number_of_photos']['message_id'])
         bot.send_message(message.from_user.id, 'Ищу отели...', reply_markup=ReplyKeyboardRemove())
 
-        if data["distance"]["distance"]:
+        if data.get("distance", None):
             result = [res for res in get_request_data(data=data)
                       if float(res["landmarks"][0]["distance"].replace(' miles', '').replace(' mile', ''))
                       <= data["distance"]["distance"] and
@@ -203,8 +207,11 @@ def get_number_of_photos(message: Message) -> None:
                 result = result[0:int(data["number_of_hotels"]["data"])]
         else:
             result = get_request_data(data=data)
+
         if result:
+            hotels_list = []
             for res in result:
+                hotels_list.append(res["name"])
                 text = get_text(res)
                 try:
                     media = get_request_data(endpoint_id=res["id"],
@@ -217,6 +224,7 @@ def get_number_of_photos(message: Message) -> None:
                                    photo=open(file=NO_PHOTO, mode='rb'),
                                    caption=text,
                                    parse_mode='HTML')
+            save_history_data(user_id=message.from_user.id, command=data["sortOrder"], hotels=hotels_list)
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 

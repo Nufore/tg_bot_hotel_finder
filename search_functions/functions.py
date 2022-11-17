@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+from typing import Any
 from config_data.config import headers
 from telebot.types import InputMediaPhoto
 
@@ -62,7 +63,7 @@ def get_request_data(
 		endpoint_id: str = None,
 		number_of_photos: int = None,
 		text: str = None,
-		data: list = None) -> list | None:
+		data: Any = None) -> list | None:
 	"""
 	Условие [message and locale] - поиск локаций для уточнения выбора пользователю
 	:param message: Переданное название от пользователя при запросе указания города
@@ -136,7 +137,7 @@ def get_request_data(
 
 		url = "https://hotels4.p.rapidapi.com/properties/list"
 
-		if data['distance']['distance']:
+		if data.get("distance", None):
 			querystring = {"destinationId": data['city'],
 			               "pageNumber": "1",
 			               "pageSize": "25",  # data['number_of_hotels']['data'],
