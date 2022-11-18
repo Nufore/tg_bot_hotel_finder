@@ -94,12 +94,10 @@ def get_request_data(
 			if find:
 				cities = list()
 				suggestions = json.loads(f"{{{find[0]}}}")
-				for dest_id in suggestions['entities']:  # Обрабатываем результат
+				for dest_id in suggestions['entities']:
 					clear_destination = str_bytes_check(dest_id)
 					cities.append({'city_name': clear_destination,
-					               'destination_id': dest_id['destinationId']
-					               }
-					              )
+					               'destination_id': dest_id['destinationId']})
 				return cities
 		else:
 			print('timeout error')
@@ -138,7 +136,7 @@ def get_request_data(
 		url = "https://hotels4.p.rapidapi.com/properties/list"
 
 		if data.get("distance", None):
-			querystring = {"destinationId": data['city'],
+			querystring = {"destinationId": data['city']['id'],
 			               "pageNumber": "1",
 			               "pageSize": "25",  # data['number_of_hotels']['data'],
 			               "checkIn": data['checkin'],
@@ -146,16 +144,16 @@ def get_request_data(
 			               "adults1": "1",
 			               "priceMin": str(data['min_max_price']['minPrice']),
 			               "priceMax": str(data['min_max_price']['maxPrice']),
-			               "sortOrder": data['sortOrder'],
+			               "sortOrder": data['sortOrder']['order'],
 			               "landmarkIds": "City center"}
 		else:
-			querystring = {"destinationId": data['city'],
+			querystring = {"destinationId": data['city']['id'],
 			               "pageNumber": "1",
 			               "pageSize": data['number_of_hotels']['data'],
 			               "checkIn": data['checkin'],
 			               "checkOut": data['checkout'],
 			               "adults1": "1",
-			               "sortOrder": data['sortOrder']}
+			               "sortOrder": data['sortOrder']['order']}
 
 		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
 

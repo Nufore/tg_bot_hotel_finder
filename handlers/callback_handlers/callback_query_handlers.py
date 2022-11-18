@@ -24,7 +24,8 @@ def get_specify_city(call: CallbackQuery) -> None:
         loc_name = data['hotels_key'][call.data].split('|')[0]
         loc_id = data['hotels_key'][call.data].split('|')[-1]
     del data['hotels_key']
-    data['city'] = loc_id
+    data['city'] = {"name": loc_name,
+                    "id": loc_id}
     bot.edit_message_text(f'Локация: {loc_name}', call.message.chat.id,
                           call.message.message_id)
 
@@ -84,7 +85,7 @@ def calend_checkout(call: CallbackQuery) -> None:
                               call.message.chat.id,
                               call.message.message_id)
         data['checkout'] = result
-        if data['sortOrder'] == 'DISTANCE_FROM_LANDMARK':
+        if data['sortOrder']['order'] == 'DISTANCE_FROM_LANDMARK':
             bot.set_state(call.from_user.id, UserInfoState.minMaxPrice, call.message.chat.id)
             message_1_id = bot.send_message(call.from_user.id, 'Укажите диапазон цен',)
             message_2_id = bot.send_message(call.from_user.id, 'Цена от:', reply_markup=min_max_price(is_min=True))
@@ -165,7 +166,11 @@ def get_need_photos(call: CallbackQuery) -> None:
                 hotels_list.append(res["name"])
                 text = get_text(res)
                 bot.send_message(call.message.chat.id, text, parse_mode='HTML', disable_web_page_preview=True)
-            save_history_data(user_id=call.from_user.id, command=data["sortOrder"], hotels=hotels_list)
+            save_history_data(user_id=call.from_user.id,
+                              command=data["sortOrder"]["order"],
+                              loc=data["city"]["name"],
+                              hotels=hotels_list,
+                              date=data["sortOrder"]["datetime"])
         else:
             bot.send_message(call.message.chat.id, 'Request data not found :(')
 
@@ -217,7 +222,11 @@ def get_numbers_p(call: CallbackQuery) -> None:
                                photo=open(file=NO_PHOTO, mode='rb'),
                                caption=text,
                                parse_mode='HTML')
-        save_history_data(user_id=call.from_user.id, command=data["sortOrder"], hotels=hotels_list)
+        save_history_data(user_id=call.from_user.id,
+                          command=data["sortOrder"]["order"],
+                          loc=data["city"]["name"],
+                          hotels=hotels_list,
+                          date=data["sortOrder"]["datetime"])
     else:
         bot.send_message(call.from_user.id, 'Не удалось найти отели по запрашиваемым параметрам.')
 

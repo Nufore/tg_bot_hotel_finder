@@ -28,7 +28,7 @@ def city_markup(message: Message, bot) -> InlineKeyboardMarkup:
 	return
 
 
-def city(message: Message, bot) -> None:
+def get_city(message: Message, bot) -> None:
 	"""
 	Функция для отправки кнопок с выбором локации для пользователя
 	:param message: Сообщение от пользователя при запросе указания города

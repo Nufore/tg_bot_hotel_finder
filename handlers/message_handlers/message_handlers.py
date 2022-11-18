@@ -173,7 +173,11 @@ def get_is_need_photos(message: Message) -> None:
                 hotels_list.append(res["name"])
                 text = get_text(res)
                 bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
-            save_history_data(user_id=message.from_user.id, command=data["sortOrder"], hotels=hotels_list)
+            save_history_data(user_id=message.from_user.id,
+                              command=data["sortOrder"]["order"],
+                              loc=data["city"]["name"],
+                              hotels=hotels_list,
+                              date=data["sortOrder"]["datetime"])
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 
@@ -224,7 +228,11 @@ def get_number_of_photos(message: Message) -> None:
                                    photo=open(file=NO_PHOTO, mode='rb'),
                                    caption=text,
                                    parse_mode='HTML')
-            save_history_data(user_id=message.from_user.id, command=data["sortOrder"], hotels=hotels_list)
+            save_history_data(user_id=message.from_user.id,
+                              command=data["sortOrder"]["order"],
+                              loc=data["city"]["name"],
+                              hotels=hotels_list,
+                              date=data["sortOrder"]["datetime"])
         else:
             bot.send_message(message.from_user.id, 'Request data not found :(')
 
