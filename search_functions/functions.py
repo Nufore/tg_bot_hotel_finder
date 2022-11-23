@@ -2,8 +2,9 @@ import json
 import re
 import requests
 from typing import Any
-from config_data.config import headers
+from config_data.config import headers, LOG_PATH
 from telebot.types import InputMediaPhoto
+from loguru import logger
 
 
 def str_bytes_check(entity: dict) -> str:
@@ -57,6 +58,10 @@ def get_text(data: dict) -> str:
 	return text
 
 
+logger.add(LOG_PATH, format="{time} {level} {message}", level="ERROR", serialize=True)
+
+
+@logger.catch()
 def get_request_data(
 		message: str = None,
 		locale: str = None,
@@ -81,60 +86,58 @@ def get_request_data(
 	:return: Возвращает список results из searchResults
 	при запросе по url = "https://hotels4.p.rapidapi.com/properties/list"
 	"""
+
 	if message and locale:
 		url = "https://hotels4.p.rapidapi.com/locations/v2/search"
-
 		querystring = {"query": message, "locale": locale}
 
-		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-		pattern = r'(?<="CITY_GROUP",).+?[\]]'
-
-		if response.status_code == requests.codes.ok:
-			find = re.search(pattern, response.text)
-			if find:
-				cities = list()
-				suggestions = json.loads(f"{{{find[0]}}}")
-				for dest_id in suggestions['entities']:
-					clear_destination = str_bytes_check(dest_id)
-					cities.append({'city_name': clear_destination,
-					               'destination_id': dest_id['destinationId']})
-				return cities
-		else:
-			print('timeout error')
-			return
+		try:
+			response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
+			pattern = r'(?<="CITY_GROUP",).+?[\]]'
+			if response.status_code == requests.codes.ok:
+				find = re.search(pattern, response.text)
+				if find:
+					cities = list()
+					suggestions = json.loads(f"{{{find[0]}}}")
+					for dest_id in suggestions['entities']:
+						clear_destination = str_bytes_check(dest_id)
+						cities.append({'city_name': clear_destination,
+						               'destination_id': dest_id['destinationId']})
+					return cities
+		except requests.exceptions.ReadTimeout:
+			logger.error("Timeout error. The server did not send any data in the allotted amount of time.")
 
 	elif endpoint_id and number_of_photos and text:
 		if number_of_photos > 10:
 			number_of_photos = 10
 		url = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
-
 		querystring = {"id": endpoint_id}
 
-		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-
-		if response.status_code == requests.codes.ok:
-			pattern = r'(?<=,)"hotelImages":.+?(?=,"roomImages)'
-			find = re.search(pattern, response.text)
-			if find:
-				result = json.loads(f"{{{find[0]}}}")
-				media = list()
-				for i_photo in range(number_of_photos):
-					if media:
-						media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')))
-					else:
-						media.append(InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
-						                             caption=text, parse_mode='HTML'))
-				return media
-		else:
-			print('timeout error')
-			return
+		try:
+			response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
+			if response.status_code == requests.codes.ok:
+				pattern = r'(?<=,)"hotelImages":.+?(?=,"roomImages)'
+				find = re.search(pattern, response.text)
+				if find:
+					result = json.loads(f"{{{find[0]}}}")
+					media = list()
+					for i_photo in range(number_of_photos):
+						if media:
+							media.append(
+								InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z')))
+						else:
+							media.append(
+								InputMediaPhoto(result['hotelImages'][i_photo]['baseUrl'].replace('{size}', 'z'),
+								                caption=text, parse_mode='HTML'))
+					return media
+		except requests.exceptions.ReadTimeout:
+			logger.error("Timeout error. The server did not send any data in the allotted amount of time.")
 
 	elif data:
 		if int(data['number_of_hotels']['data']) > 10:
 			data['number_of_hotels']['data'] = '10'
 
 		url = "https://hotels4.p.rapidapi.com/properties/list"
-
 		if data.get("distance", None):
 			querystring = {"destinationId": data['city']['id'],
 			               "pageNumber": "1",
@@ -155,14 +158,13 @@ def get_request_data(
 			               "adults1": "1",
 			               "sortOrder": data['sortOrder']['order']}
 
-		response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
-
-		if response.status_code == requests.codes.ok:
-			pattern = r'(?<=,)"results":.+?(?=,"pagination)'
-			find = re.search(pattern, response.text)
-			if find:
-				result = json.loads(f"{{{find[0]}}}")
-				return result['results']
-		else:
-			print('timeout error')
-			return
+		try:
+			response = requests.request("GET", url, headers=headers, params=querystring, timeout=10)
+			if response.status_code == requests.codes.ok:
+				pattern = r'(?<=,)"results":.+?(?=,"pagination)'
+				find = re.search(pattern, response.text)
+				if find:
+					result = json.loads(f"{{{find[0]}}}")
+					return result['results']
+		except requests.exceptions.ReadTimeout:
+			logger.error("Timeout error. The server did not send any data in the allotted amount of time.")

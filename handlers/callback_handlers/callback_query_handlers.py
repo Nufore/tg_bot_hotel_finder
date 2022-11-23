@@ -154,6 +154,7 @@ def get_need_photos(call: CallbackQuery) -> None:
                       data['min_max_price']['minPrice']
                       <= res["ratePlan"]["price"]["exactCurrent"]
                       <= data['min_max_price']['maxPrice']]
+
             if len(result) > int(data["number_of_hotels"]["data"]):
                 result = result[0:int(data["number_of_hotels"]["data"])]
         else:

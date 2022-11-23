@@ -15,6 +15,10 @@ class UserInfoState(StatesGroup):
 
 	city - Город для поиска. destination_id выбранный пользователем
 
+	minMaxPrice - минимальная/максимальная цена для комманда /bestdeal
+
+	distance - удаленность от центра для команды /bestdeal
+
 	number_of_hotels - Количество выводимых отелей
 
 	is_need_photos - Параметр вывода фото. Если да, то выводим

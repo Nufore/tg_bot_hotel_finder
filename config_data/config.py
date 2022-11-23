@@ -10,6 +10,8 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 RAPID_API_KEY = os.getenv('RAPID_API_KEY')
 NO_PHOTO = os.getenv('NO_PHOTO_PATH')
 
+LOG_PATH = os.getenv('LOG_PATH')
+
 headers = {
         "X-RapidAPI-Key": RAPID_API_KEY,
         "X-RapidAPI-Host": "hotels4.p.rapidapi.com"
