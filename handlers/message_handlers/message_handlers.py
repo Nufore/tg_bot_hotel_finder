@@ -1,12 +1,16 @@
 from database.db_connect import save_history_data
 from loader import bot
-from config_data.config import NO_PHOTO
+from config_data.config import NO_PHOTO, LOG_PATH
 from telebot.types import Message, ReplyKeyboardRemove
 from states.state_information import UserInfoState
 from search_functions.functions import get_text, get_request_data
 from keyboards.inline.get_numbers import get_number
 from keyboards.reply.is_need_photo import request_photo
 from keyboards.reply.min_max_price import min_max_price
+from loguru import logger
+
+
+logger.add(LOG_PATH, format="{time} {level} {message}", level="ERROR", serialize=True)
 
 
 @bot.message_handler(state=UserInfoState.minMaxPrice)
@@ -166,20 +170,22 @@ def get_is_need_photos(message: Message) -> None:
                 result = result[0:int(data["number_of_hotels"]["data"])]
         else:
             result = get_request_data(data=data)
-
-        if result:
-            hotels_list = []
-            for res in result:
-                hotels_list.append(res["name"])
-                text = get_text(res)
-                bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
-            save_history_data(user_id=message.from_user.id,
-                              command=data["sortOrder"]["order"],
-                              loc=data["city"]["name"],
-                              hotels=hotels_list,
-                              date=data["sortOrder"]["datetime"])
-        else:
-            bot.send_message(message.from_user.id, 'Request data not found :(')
+        try:
+            if result:
+                hotels_list = []
+                for res in result:
+                    hotels_list.append(res["name"])
+                    text = get_text(res)
+                    bot.send_message(message.from_user.id, text, parse_mode='HTML', disable_web_page_preview=True)
+                save_history_data(user_id=message.from_user.id,
+                                  command=data["sortOrder"]["order"],
+                                  loc=data["city"]["name"],
+                                  hotels=hotels_list,
+                                  date=data["sortOrder"]["datetime"])
+            else:
+                bot.send_message(message.from_user.id, 'Request data not found :(')
+        except Exception as e:
+            logger.error(e.__str__())
 
         bot.delete_state(message.from_user.id, message.chat.id)
     else:
@@ -223,7 +229,7 @@ def get_number_of_photos(message: Message) -> None:
                                              text=text)
                     bot.send_media_group(message.from_user.id, media=media)
                 except Exception as e:
-                    print(e.__str__())
+                    logger.error(e.__str__())
                     bot.send_photo(message.from_user.id,
                                    photo=open(file=NO_PHOTO, mode='rb'),
                                    caption=text,

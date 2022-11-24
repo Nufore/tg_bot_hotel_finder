@@ -15,6 +15,7 @@ def city_markup(message: Message, bot) -> InlineKeyboardMarkup:
 		locale = 'ru_RU'
 	else:
 		locale = 'en_US'
+
 	cities = get_request_data(message=message.text, locale=locale)
 	if cities:
 		with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -22,8 +23,7 @@ def city_markup(message: Message, bot) -> InlineKeyboardMarkup:
 		destinations = InlineKeyboardMarkup()
 		for num, city in enumerate(cities, 1):
 			data['hotels_key'][f'key_{str(num)}'] = f'{city["city_name"]}|{city["destination_id"]}'
-			destinations.add(InlineKeyboardButton(text=city["city_name"],
-			                                      callback_data=f'key_{str(num)}'))
+			destinations.add(InlineKeyboardButton(text=city["city_name"], callback_data=f'key_{str(num)}'))
 		return destinations
 	return
 
@@ -37,8 +37,6 @@ def get_city(message: Message, bot) -> None:
 	"""
 	markup = city_markup(message, bot)
 	if markup:
-		bot.send_message(message.from_user.id, 'Уточните, пожалуйста:',
-		                 reply_markup=markup)
+		bot.send_message(message.from_user.id, 'Уточните, пожалуйста:', reply_markup=markup)
 	else:
-		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз.',
-		                 reply_markup=bot_commands())
+		bot.send_message(message.from_user.id, 'Пустая выборка! Попробуйте еще раз.', reply_markup=bot_commands())

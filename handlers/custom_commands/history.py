@@ -15,8 +15,10 @@ def history(message: Message) -> None:
 
     ReplyKeyboardRemove()
     hist_list = get_history_data(message.from_user.id)
-    if hist_list:
+    if isinstance(hist_list, list) and hist_list:
         for text in hist_list:
             bot.send_message(message.from_user.id, text)
+    elif isinstance(hist_list, bool):
+        bot.send_message(message.from_user.id, 'Не удалось обратиться к БД.')
     else:
         bot.send_message(message.from_user.id, 'Пока не было запросов.')
