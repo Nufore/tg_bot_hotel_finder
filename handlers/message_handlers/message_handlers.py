@@ -53,10 +53,10 @@ def get_min_max_price(message: Message) -> None:
                                           message.from_user.id,
                                           data['min_max_price']['message_id'][0])
 
-                    bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(1))
                     message_3_id = bot.send_message(message.from_user.id, 'Цена до:',
                                                     reply_markup=min_max_price(
                                                         mltp=data['min_max_price']['minPrice']))
+                    bot.delete_message(message.from_user.id, data['min_max_price']['message_id'].pop(1))
                     data['min_max_price']['message_id'].append(message_3_id.message_id)
                 else:
                     data['min_max_price']['message_id'].append(message.message_id)
